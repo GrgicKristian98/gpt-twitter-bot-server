@@ -19,4 +19,7 @@ export const AppDataSource = new DataSource({
     entities: [User, Execution, Temp, Tweet],
     subscribers: [],
     migrations: [],
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
