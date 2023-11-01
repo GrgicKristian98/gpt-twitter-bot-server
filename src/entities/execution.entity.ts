@@ -15,6 +15,9 @@ export class Execution {
     @Column()
     enabled: boolean;
 
+    @Column({name: 'user_id'})
+    userId: number;
+
     @ManyToOne(() => User, user => user.executions, {onDelete: 'CASCADE'})
     @JoinColumn({name: 'user_id'})
     user: User;

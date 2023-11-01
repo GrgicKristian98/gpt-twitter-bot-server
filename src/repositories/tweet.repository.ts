@@ -40,7 +40,7 @@ export class TweetRepository {
     public async getTweetsForUser(userId: number): Promise<Tweet[]> {
         return await this.tweetRepository.find({
             where: {
-                user: userId
+                userId: userId
             },
             order: {
                 tweetPublished: "DESC"

@@ -12,6 +12,9 @@ export class Tweet {
     @CreateDateColumn({name: 'tweet_published', type: 'timestamp'})
     tweetPublished: Date;
 
+    @Column({name: 'user_id'})
+    userId: number;
+
     @ManyToOne(() => User, user => user.tweets, {onDelete: 'CASCADE'})
     @JoinColumn({name: 'user_id'})
     user: User;

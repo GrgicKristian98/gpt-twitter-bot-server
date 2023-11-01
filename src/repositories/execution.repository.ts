@@ -16,7 +16,7 @@ export class ExecutionRepository {
         const existingExecution = await this.executionRepository.findOne({
             where: {
                 id: execution.id,
-                user: userId
+                userId: userId
             }
         });
 
@@ -31,7 +31,7 @@ export class ExecutionRepository {
         const existingExecution = await this.executionRepository.findOne({
             where: {
                 id: executionId,
-                user: userId
+                userId: userId
             }
         });
 
@@ -46,7 +46,7 @@ export class ExecutionRepository {
     public async getNumberOfExecutionsForUser(userId: number): Promise<number> {
         return await this.executionRepository.count({
             where: {
-                user: userId
+                userId: userId
             }
         });
     }
@@ -54,7 +54,7 @@ export class ExecutionRepository {
     public async getExecutionsForUser(userId: number): Promise<Execution[]> {
         return await this.executionRepository.find({
             where: {
-                user: userId
+                userId: userId
             }
         });
     }
