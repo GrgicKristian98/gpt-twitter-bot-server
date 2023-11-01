@@ -1,6 +1,6 @@
 import {OpenAI} from "langchain/llms/openai";
 import {PromptTemplate} from "langchain/prompts";
-import {DynamicTool, SerpAPI} from "langchain/tools";
+import {DynamicTool, GoogleCustomSearch} from "langchain/tools";
 import {ExtractorAPI} from "./tools/extractor.tool";
 import {AgentExecutor, initializeAgentExecutorWithOptions} from "langchain/agents";
 
@@ -17,7 +17,7 @@ export class GPTUtils {
         });
 
         const template: string =
-            `Create a tweet about {query} based on the latest news. 
+            `Use google-custom-search tool to search for the latest news and create a tweet about {query} .
              Include emojis, hashtags, and ensure it's factual and informative. 
              Before outputting the tweet, validate it's length using tweetcharactercount tool.`;
 
@@ -27,7 +27,8 @@ export class GPTUtils {
         });
 
         this.tools = [
-            new SerpAPI(),
+            //new SerpAPI(),
+            new GoogleCustomSearch(),
             new DynamicTool({
                 name: "extractorapi",
                 func: ExtractorAPI.extractFromURL,

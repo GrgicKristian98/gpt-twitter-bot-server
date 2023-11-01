@@ -22,11 +22,11 @@ router.post('/api/tweet', verifyToken, (req: CustomRequest, res) => {
     tweetController
         .postTweet(userId, topic)
         .then((embeds) => {
-            req.io.emit(`tweet-post-${userId}`, embeds);
+            req.io.emit(`tweet-post-${token}`, embeds);
             log.info(`Event emitted: tweet-post-${token}`);
         })
         .catch((err: HttpError) => {
-            req.io.emit(`tweet-post-${userId}`, err.getHttpCode());
+            req.io.emit(`tweet-post-${token}`, err.getHttpCode());
             log.warn(`Event emitted: tweet-post-${token}`);
         });
 });
