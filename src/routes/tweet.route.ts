@@ -12,6 +12,8 @@ const router = Router();
 const tweetController = new TweetController();
 
 router.post('/api/tweet', verifyToken, (req: CustomRequest, res) => {
+    const token = req.headers['authorization'];
+
     const userId = req.userId;
     const topic = req.body.topic;
 
@@ -21,11 +23,11 @@ router.post('/api/tweet', verifyToken, (req: CustomRequest, res) => {
         .postTweet(userId, topic)
         .then((embeds) => {
             req.io.emit(`tweet-post-${userId}`, embeds);
-            log.info(`Event emitted: tweet-post-${userId}`);
+            log.info(`Event emitted: tweet-post-${token}`);
         })
         .catch((err: HttpError) => {
             req.io.emit(`tweet-post-${userId}`, err.getHttpCode());
-            log.warn(`Event emitted: tweet-post-${userId}`);
+            log.warn(`Event emitted: tweet-post-${token}`);
         });
 });
 

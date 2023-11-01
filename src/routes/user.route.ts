@@ -34,8 +34,8 @@ router.get('/api/user/validate', verifyToken, (req: CustomRequest, res) => {
     const userId = req.userId;
     userController
         .validateUser(userId)
-        .then((user) => {
-            res.status(HttpStatusCodes.OK).json({userId: user.id});
+        .then(() => {
+            res.status(HttpStatusCodes.OK).json({message: 'User is valid'});
         })
         .catch((err: HttpError) => {
             res.status(err.getHttpCode()).json({message: err.message});
