@@ -36,10 +36,9 @@ class App {
         this.express = express();
         this.server = new Server(this.express);
 
-        // TODO: Change CORS origin when deploying to production
         this.io = new IOServer(this.server, {
             cors: {
-                origin: "*",
+                origin: "https://www.creategptbot.com",
                 methods: ["GET", "POST"]
             }
         });
@@ -49,8 +48,7 @@ class App {
     }
 
     private middleware(): void {
-        // TODO: Change CORS origin when deploying to production
-        this.express.use(cors({origin: "*"}));
+        this.express.use(cors({origin: "https://www.creategptbot.com"}));
         this.express.use(bodyParser.json());
         this.express.use(bodyParser.urlencoded({extended: false}));
     }
