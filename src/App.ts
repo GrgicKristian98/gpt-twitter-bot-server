@@ -7,6 +7,8 @@ import {Server} from "http";
 import {APILogger} from "./logger/api.logger";
 import {AppDataSource} from "./dataSource";
 import {scheduler} from "./utils/scheduler.utils";
+import {Server as IOServer} from "socket.io";
+import {CustomRequest} from "./interfaces/customRequest.interface";
 
 const cors = require("cors");
 const express = require("express");
@@ -28,21 +30,37 @@ import executionRoutes from "./routes/execution.route";
 class App {
     public express: Application;
     public server: Server;
+    public io: IOServer;
 
     constructor() {
         this.express = express();
         this.server = new Server(this.express);
+
+        // TODO: Change CORS origin when deploying to production
+        this.io = new IOServer(this.server, {
+            cors: {
+                origin: "*",
+                methods: ["GET", "POST"]
+            }
+        });
+
         this.middleware();
         this.routes();
     }
 
     private middleware(): void {
+        // TODO: Change CORS origin when deploying to production
         this.express.use(cors({origin: "*"}));
         this.express.use(bodyParser.json());
         this.express.use(bodyParser.urlencoded({extended: false}));
     }
 
     private routes(): void {
+        this.express.use((req: CustomRequest, res, next) => {
+            req.io = this.io;
+            next();
+        });
+
         this.express.use(userRoutes);
         this.express.use(tweetRoutes);
         this.express.use(executionRoutes);
