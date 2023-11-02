@@ -8,6 +8,7 @@ import {TwitterApi} from "twitter-api-v2";
 import {Tweet} from "../entities/tweet.entity";
 import {TweetRepository} from "../repositories/tweet.repository";
 import {TweetError} from "../errors/tweet.error";
+import {error} from "winston";
 
 export class TweetService {
     private log: APILogger;
@@ -42,8 +43,26 @@ export class TweetService {
             const user = await this.userService.validateUser(userId);
 
             // 2. Generate tweet with GPT LLM
-            this.log.info(`[TweetService] Generating tweet for topic: ${topic}`);
-            const tweet = await this.gptUtils.generateTweet(topic);
+            let tweet = null;
+            let errorThrown = false;
+            let numOfErrorsThrown = 0;
+
+            do {
+                this.log.info(`[TweetService] Generating tweet for topic: ${topic}`);
+
+                try {
+                    tweet = await this.gptUtils.generateTweet(topic);
+                    errorThrown = false;
+                } catch (error) {
+                    this.log.error(`[TweetService] Error generating tweet: ${error.message}`);
+                    errorThrown = true;
+                    numOfErrorsThrown++;
+                }
+
+                if (numOfErrorsThrown > 5 && errorThrown) {
+                    break;
+                }
+            } while (errorThrown);
 
             if (!tweet) {
                 throw new HttpError("Tweet could not be generated", HttpStatusCodes.INTERNAL_SERVER_ERROR);
