@@ -22,7 +22,11 @@ class SchedulerUtils {
                 executions.forEach((execution) => {
                     if (execution.enabled) {
                         this.scheduleJob(execution.id, execution.executionTime, async () => {
-                            await this.tweetService.postTweet(execution.user.id, execution.topic);
+                            try {
+                                await this.tweetService.postTweet(execution.userId, execution.topic);
+                            } catch (error) {
+                                this.log.error(`[SchedulerUtils] Error posting tweet for execution with id=${execution.id}: ${error.message}`);
+                            }
                         });
                     }
                 });

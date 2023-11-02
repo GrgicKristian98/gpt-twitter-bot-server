@@ -14,6 +14,7 @@ export class GPTUtils {
             temperature: 0.5,
             openAIApiKey: process.env.OPENAI_API_KEY,
             modelName: "gpt-3.5-turbo-16k",
+            maxTokens: 280,
         });
 
         const template: string =
