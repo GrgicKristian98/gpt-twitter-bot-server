@@ -18,9 +18,10 @@ export class GPTUtils {
         });
 
         const template: string =
-            `Use google-custom-search tool to search for the latest news and create a tweet about {query} .
-             Include emojis, hashtags, and ensure it's factual and informative. 
-             Before outputting the tweet, validate it's length using tweetcharactercount tool.`;
+            `Search for the latest news on {query} using the google-custom-search tool. 
+             Create a factual and informative tweet about it, including emojis and hashtags. 
+             Verify the tweet's length using the tweetcharactercount tool before outputting it.`;
+
 
         this.prompt = new PromptTemplate({
             template: template,
