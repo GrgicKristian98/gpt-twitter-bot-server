@@ -8,7 +8,6 @@ import {TwitterApi} from "twitter-api-v2";
 import {Tweet} from "../entities/tweet.entity";
 import {TweetRepository} from "../repositories/tweet.repository";
 import {TweetError} from "../errors/tweet.error";
-import {error} from "winston";
 
 export class TweetService {
     private log: APILogger;
@@ -42,33 +41,7 @@ export class TweetService {
             this.log.info(`[TweetService] Validating user with userId: ${userId}`);
             const user = await this.userService.validateUser(userId);
 
-            // 2. Generate tweet with GPT LLM
-            let tweet = null;
-            let errorThrown = false;
-            let numOfErrorsThrown = 0;
-
-            do {
-                this.log.info(`[TweetService] Generating tweet for topic: ${topic}`);
-
-                try {
-                    tweet = await this.gptUtils.generateTweet(topic);
-                    errorThrown = false;
-                } catch (error) {
-                    this.log.error(`[TweetService] Error generating tweet: ${error.message}`);
-                    errorThrown = true;
-                    numOfErrorsThrown++;
-                }
-
-                if (numOfErrorsThrown > 5 && errorThrown) {
-                    break;
-                }
-            } while (errorThrown);
-
-            if (!tweet) {
-                throw new HttpError("Tweet could not be generated", HttpStatusCodes.INTERNAL_SERVER_ERROR);
-            }
-
-            // 3. Get Twitter OAuth2 token
+            // 2. Get Twitter OAuth2 token
             this.log.info(`[TweetService] Getting Twitter OAuth2 token for user: ${user.accountId}`);
             const {
                 client: refreshedClient,
@@ -80,16 +53,49 @@ export class TweetService {
                 throw new HttpError("Could not refresh OAuth2 token", HttpStatusCodes.INTERNAL_SERVER_ERROR);
             }
 
-            // 4. Update user with new tokens
+            // 3. Update user with new tokens
             this.log.info(`[TweetService] Updating user with new tokens`);
             const updateSuccess = await this.userRepository.updateUser(userId, newAccessToken, newRefreshToken);
             if (!updateSuccess) {
                 throw new HttpError("Could not update user", HttpStatusCodes.INTERNAL_SERVER_ERROR);
             }
 
-            // 5. Post tweet to Twitter
-            this.log.info(`[TweetService] Posting to Twitter with tweet: ${tweet}`);
-            const {data} = await refreshedClient.v2.tweet(tweet);
+            let data = null;
+            let errorThrown = false;
+            let numOfErrorsThrown = 0;
+
+            do {
+                let tweet = null;
+
+                // 4. Generate tweet with GPT LLM
+                this.log.info(`[TweetService] Generating tweet for topic: ${topic}`);
+                try {
+                    tweet = await this.gptUtils.generateTweet(topic);
+                    errorThrown = false;
+                } catch (error) {
+                    this.log.error(`[TweetService] Error generating tweet: ${error.message}`);
+                    errorThrown = true;
+                    numOfErrorsThrown++;
+                }
+
+                if (tweet) {
+                    // 5. Post tweet to Twitter
+                    this.log.info(`[TweetService] Posting to Twitter with tweet: ${tweet}`);
+                    try {
+                        const {data: responseData} = await refreshedClient.v2.tweet(tweet);
+                        data = responseData;
+                        errorThrown = false;
+                    } catch (error) {
+                        this.log.error(`[TweetService] Error posting tweet: ${error.message}`);
+                        errorThrown = true;
+                        numOfErrorsThrown++;
+                    }
+                }
+
+                if (numOfErrorsThrown > 5 && errorThrown) {
+                    break;
+                }
+            } while (errorThrown);
 
             if (!data) {
                 throw new HttpError("Could not post tweet to Twitter", HttpStatusCodes.INTERNAL_SERVER_ERROR);
@@ -106,7 +112,7 @@ export class TweetService {
                 throw new HttpError("Could not save tweet to DB", HttpStatusCodes.INTERNAL_SERVER_ERROR);
             }
 
-            // 8. Return tweet embeds
+            // 7. Return tweet embeds
             return this.executeTweetEmbedsRetrieval(tweetObj, userId);
         } catch (error) {
             this.log.error(`[TweetService] Error generating and posting tweet: ${error.message}`);
